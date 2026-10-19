@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Trạng Thái &amp; Máy Chủ</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.quanlee.wazehud</string>
+			<key>key</key>
+			<string>isEnabled</string>
+			<key>label</key>
+			<string>Bật Server WazeHUD</string>
+			<key>PostNotification</key>
+			<string>com.quanlee.wazehud/ReloadPrefs</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSTitleValueCell</string>
+			<key>label</key>
+			<string>IP Hiện Tại (LAN)</string>
+			<key>get</key>
+			<string>getIPAddress:</string>
+		</dict>
+		
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Cấu hình Cổng (Ports)</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSEditTextCell</string>
+			<key>default</key>
+			<string>8080</string>
+			<key>defaults</key>
+			<string>com.quanlee.wazehud</string>
+			<key>key</key>
+			<string>httpPort</string>
+			<key>label</key>
+			<string>Cổng Web (HTTP)</string>
+			<key>isNumeric</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSEditTextCell</string>
+			<key>default</key>
+			<string>8765</string>
+			<key>defaults</key>
+			<string>com.quanlee.wazehud</string>
+			<key>key</key>
+			<string>wsPort</string>
+			<key>label</key>
+			<string>Cổng Mod (WS)</string>
+			<key>isNumeric</key>
+			<true/>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Hành động</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Lưu &amp; Khởi Động Lại Server</string>
+			<key>action</key>
+			<string>applyAndRestart:</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Mở Web HUD (Localhost)</string>
+			<key>action</key>
+			<string>openWeb:</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Cập Nhật File Giao Diện &amp; Server</string>
+			<key>footerText</key>
+			<string>Chọn file HTML/Python từ ứng dụng Tệp (Files/iCloud/Tải về) để cập nhật nhanh mà không cần build lại deb.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>📂 Chọn file cập nhật index.html</string>
+			<key>action</key>
+			<string>pickHTMLFile:</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>📂 Chọn file cập nhật server.py</string>
+			<key>action</key>
+			<string>pickPythonFile:</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>🔄 Khôi phục file HTML/Python gốc</string>
+			<key>action</key>
+			<string>restoreDefaultFiles:</string>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>WazeHUD Pro</string>
+</dict>
+</plist>

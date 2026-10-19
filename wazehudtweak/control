@@ -1,0 +1,9 @@
+Package: com.quanlee.wazehud
+Name: WazeHUD Pro
+Version: 1.0.0
+Architecture: iphoneos-arm64
+Description: WazeHUD Server manager with web and python integration.
+Maintainer: Le Quan
+Author: Le Quan
+Section: Utilities
+Depends: firmware (>= 15.0), mobilesubstrate, preferenceloader, python3, bash

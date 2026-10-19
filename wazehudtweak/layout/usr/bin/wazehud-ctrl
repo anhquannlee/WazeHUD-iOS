@@ -1,0 +1,70 @@
+#!/var/jb/bin/sh
+export PATH="/var/jb/usr/bin:/var/jb/bin:/var/jb/usr/local/bin:/usr/bin:/bin:$PATH"
+
+DIR="/var/jb/Library/WazeHUD"
+LOG_FILE="/var/mobile/wazehud.log"
+PID_FILE="/var/mobile/wazehud.pid"
+
+PYTHON_BIN="/var/jb/usr/bin/python3"
+if [ ! -x "$PYTHON_BIN" ]; then
+    PYTHON_BIN="$(which python3 2>/dev/null || echo python3)"
+fi
+
+stop_server() {
+    # 1. Kill bằng PID file nếu có
+    if [ -f "$PID_FILE" ]; then
+        PID="$(cat "$PID_FILE" 2>/dev/null)"
+        if [ -n "$PID" ]; then
+            kill -9 "$PID" 2>/dev/null || true
+        fi
+        rm -f "$PID_FILE" 2>/dev/null
+    fi
+
+    # 2. Tìm tất cả tiến trình python đang chạy server.py qua ps và kill thẳng
+    PIDS="$(ps -ef 2>/dev/null | grep "[s]erver.py" | awk '{print $2}')"
+    if [ -z "$PIDS" ]; then
+        PIDS="$(ps aux 2>/dev/null | grep "[s]erver.py" | awk '{print $2}')"
+    fi
+    for p in $PIDS; do
+        kill -9 "$p" 2>/dev/null || true
+    done
+
+    # 3. pkill fallback nếu có cài
+    if command -v pkill >/dev/null 2>&1; then
+        pkill -9 -f "server.py" 2>/dev/null || true
+    fi
+}
+
+start_server() {
+    stop_server
+    sleep 0.3
+    if [ -d "$DIR" ]; then
+        cd "$DIR" || exit 1
+        touch "$LOG_FILE" 2>/dev/null
+        chmod 666 "$LOG_FILE" 2>/dev/null
+        nohup "$PYTHON_BIN" "$DIR/server.py" "${1:-8080}" "${2:-8765}" > "$LOG_FILE" 2>&1 &
+        echo $! > "$PID_FILE"
+        chmod 666 "$PID_FILE" 2>/dev/null
+    fi
+}
+
+case "$1" in
+    stop)
+        stop_server
+        ;;
+    restart|start)
+        start_server "$2" "$3"
+        ;;
+    status)
+        if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE" 2>/dev/null)" 2>/dev/null; then
+            echo "running"
+        else
+            echo "stopped"
+        fi
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status} [httpPort] [wsPort]"
+        ;;
+esac
+
+exit 0

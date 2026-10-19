@@ -1,0 +1,15 @@
+#!/bin/sh
+# postinst cho rootless Dopamine
+
+if [ -f /var/jb/usr/bin/wazehud-ctrl ]; then
+    chmod 755 /var/jb/usr/bin/wazehud-ctrl
+fi
+
+# Tự động respring sau khi cài đặt
+if [ -x /var/jb/usr/bin/sbreload ]; then
+    /var/jb/usr/bin/sbreload 2>/dev/null || true
+elif [ -x /var/jb/usr/bin/killall ]; then
+    /var/jb/usr/bin/killall -9 SpringBoard 2>/dev/null || true
+fi
+
+exit 0
