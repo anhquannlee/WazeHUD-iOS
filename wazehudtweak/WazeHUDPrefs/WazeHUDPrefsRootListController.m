@@ -12,13 +12,29 @@
 #define PREFS_PATH @"/var/mobile/Library/Preferences/com.quanlee.wazehud.plist"
 #define PREFS_SUITE @"com.quanlee.wazehud"
 #define PID_FILE_PATH @"/var/mobile/wazehud.pid"
-#define WAZEHUD_DIR @"/var/jb/Library/WazeHUD"
+
+static inline NSString *getWazeHUDDir() {
+	if ([[NSFileManager defaultManager] fileExistsAtPath:@"/var/jb/Library/WazeHUD"]) {
+		return @"/var/jb/Library/WazeHUD";
+	}
+	return @"/Library/WazeHUD";
+}
+#define WAZEHUD_DIR getWazeHUDDir()
 
 @interface WazeHUDPrefsRootListController ()
 @property (nonatomic, assign) BOOL isPickingHTML;
 @end
 
 @implementation WazeHUDPrefsRootListController
+
+- (void)viewDidLoad {
+	[super viewDidLoad];
+	self.title = @"WazeHUD Pro v2.0.0";
+}
+
+- (NSString *)getVersionString:(PSSpecifier *)specifier {
+	return @"v2.0.0";
+}
 
 - (NSArray *)specifiers {
 	if (!_specifiers) {
@@ -101,50 +117,51 @@
 }
 
 // MARK: - Quản lý tiến trình qua script wazehud-ctrl
-- (int)runControlScriptWithAction:(NSString *)action httpPort:(NSString *)httpPort wsPort:(NSString *)wsPort {
-	const char *shellPath = "/var/jb/bin/sh";
+- (int)runControlScriptWithArgs:(NSArray<NSString *> *)argsList {
+	const char *shellPath = "/bin/sh";
 	if (access(shellPath, X_OK) != 0) {
-		shellPath = "/bin/sh";
+		shellPath = "/var/jb/bin/sh";
 	}
 	const char *scriptPath = "/var/jb/usr/bin/wazehud-ctrl";
+	if (access(scriptPath, X_OK) != 0) {
+		scriptPath = "/usr/bin/wazehud-ctrl";
+	}
 
 	char *const customEnv[] = {
-		"PATH=/var/jb/usr/bin:/var/jb/bin:/var/jb/usr/local/bin:/usr/bin:/bin",
+		"PATH=/var/jb/usr/bin:/var/jb/bin:/var/jb/usr/local/bin:/usr/bin:/bin:/usr/local/bin:/usr/sbin:/sbin",
 		"HOME=/var/mobile",
 		NULL
 	};
 
-	pid_t pid = 0;
-	int ret = -1;
-
-	if ([action isEqualToString:@"restart"] || [action isEqualToString:@"start"]) {
-		const char *hPort = [httpPort UTF8String] ?: "8080";
-		const char *wPort = [wsPort UTF8String] ?: "8765";
-		const char *args[] = {
-			shellPath,
-			scriptPath,
-			"restart",
-			hPort,
-			wPort,
-			NULL
-		};
-		ret = posix_spawn(&pid, shellPath, NULL, NULL, (char *const *)args, customEnv);
-	} else {
-		const char *args[] = {
-			shellPath,
-			scriptPath,
-			"stop",
-			NULL
-		};
-		ret = posix_spawn(&pid, shellPath, NULL, NULL, (char *const *)args, customEnv);
+	NSUInteger count = argsList.count;
+	const char **args = (const char **)malloc(sizeof(char *) * (count + 3));
+	args[0] = shellPath;
+	args[1] = scriptPath;
+	for (NSUInteger i = 0; i < count; i++) {
+		args[i + 2] = [argsList[i] UTF8String];
 	}
+	args[count + 2] = NULL;
+
+	pid_t pid = 0;
+	int ret = posix_spawn(&pid, shellPath, NULL, NULL, (char *const *)args, customEnv);
+	free(args);
 
 	if (ret == 0 && pid > 0) {
 		int status;
-		waitpid(pid, &status, WNOHANG);
+		waitpid(pid, &status, 0);
 	}
 
 	return ret;
+}
+
+- (int)runControlScriptWithAction:(NSString *)action httpPort:(NSString *)httpPort wsPort:(NSString *)wsPort {
+	if ([action isEqualToString:@"restart"] || [action isEqualToString:@"start"]) {
+		NSString *hp = httpPort ?: @"8080";
+		NSString *wp = wsPort ?: @"8765";
+		return [self runControlScriptWithArgs:@[@"restart", hp, wp]];
+	} else {
+		return [self runControlScriptWithArgs:@[@"stop"]];
+	}
 }
 
 // MARK: - Hàm lấy IP thiết bị
@@ -309,6 +326,7 @@
 
 	NSString *fileName = self.isPickingHTML ? @"index.html" : @"server.py";
 	NSString *destPath = [WAZEHUD_DIR stringByAppendingPathComponent:fileName];
+	NSString *tempPath = @"/var/mobile/wazehud_temp_import.dat";
 
 	NSError *error = nil;
 	NSData *data = [NSData dataWithContentsOfURL:sourceURL options:0 error:&error];
@@ -318,20 +336,26 @@
 	}
 
 	if (data && data.length > 0) {
-		// Tạo thư mục nếu chưa có
+		// 1. Ghi vào file tạm của user mobile
+		[data writeToFile:tempPath atomically:YES];
+
+		// 2. Gọi script wazehud-ctrl để cài đặt file vào thư mục đích với full quyền
+		[self runControlScriptWithArgs:@[@"install-file", tempPath, fileName]];
+
+		// 3. Dự phòng ghi trực tiếp nếu có quyền
 		[[NSFileManager defaultManager] createDirectoryAtPath:WAZEHUD_DIR withIntermediateDirectories:YES attributes:nil error:nil];
+		[data writeToFile:destPath atomically:YES];
+		[[NSFileManager defaultManager] setAttributes:@{NSFilePosixPermissions: @0666} ofItemAtPath:destPath error:nil];
 
-		BOOL written = [data writeToFile:destPath atomically:YES];
-		if (written) {
-			[[NSFileManager defaultManager] setAttributes:@{NSFilePosixPermissions: @0644} ofItemAtPath:destPath error:nil];
-
-			// Nếu cập nhật server.py và server đang bật thì khởi động lại server
+		// 4. Kiểm tra file sau khi cài
+		NSDictionary *attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:destPath error:nil];
+		if (attrs && [attrs fileSize] > 0) {
 			NSUserDefaults *defaults = [[NSUserDefaults alloc] initWithSuiteName:PREFS_SUITE];
 			if (!self.isPickingHTML && [defaults boolForKey:@"isEnabled"]) {
 				[self startServer];
 			}
 
-			[self showAlertWithTitle:@"Thành Công" message:[NSString stringWithFormat:@"Đã cập nhật file '%@' thành công! (Dung lượng: %lu bytes)", fileName, (unsigned long)data.length]];
+			[self showAlertWithTitle:@"Thành Công" message:[NSString stringWithFormat:@"Đã cập nhật file '%@' thành công! (Dung lượng: %lu bytes)", fileName, (unsigned long)[attrs fileSize]]];
 		} else {
 			[self showAlertWithTitle:@"Lỗi Ghi File" message:[NSString stringWithFormat:@"Không thể ghi vào đường dẫn: %@", destPath]];
 		}
@@ -357,20 +381,23 @@
 	NSString *htmlDest = [WAZEHUD_DIR stringByAppendingPathComponent:@"index.html"];
 	NSString *pyDest   = [WAZEHUD_DIR stringByAppendingPathComponent:@"server.py"];
 
-	BOOL okHtml = NO;
-	BOOL okPy = NO;
+	// 1. Gọi script wazehud-ctrl restore để chép lại file gốc
+	[self runControlScriptWithArgs:@[@"restore"]];
 
+	// 2. Chép trực tiếp bổ trợ nếu có quyền
 	if ([fm fileExistsAtPath:htmlDefault]) {
 		[fm removeItemAtPath:htmlDest error:nil];
-		okHtml = [fm copyItemAtPath:htmlDefault toPath:htmlDest error:nil];
-		[fm setAttributes:@{NSFilePosixPermissions: @0644} ofItemAtPath:htmlDest error:nil];
+		[fm copyItemAtPath:htmlDefault toPath:htmlDest error:nil];
+		[fm setAttributes:@{NSFilePosixPermissions: @0666} ofItemAtPath:htmlDest error:nil];
 	}
-
 	if ([fm fileExistsAtPath:pyDefault]) {
 		[fm removeItemAtPath:pyDest error:nil];
-		okPy = [fm copyItemAtPath:pyDefault toPath:pyDest error:nil];
-		[fm setAttributes:@{NSFilePosixPermissions: @0644} ofItemAtPath:pyDest error:nil];
+		[fm copyItemAtPath:pyDefault toPath:pyDest error:nil];
+		[fm setAttributes:@{NSFilePosixPermissions: @0666} ofItemAtPath:pyDest error:nil];
 	}
+
+	BOOL okHtml = [fm fileExistsAtPath:htmlDest];
+	BOOL okPy   = [fm fileExistsAtPath:pyDest];
 
 	// Restart server nếu đang bật
 	NSUserDefaults *defaults = [[NSUserDefaults alloc] initWithSuiteName:PREFS_SUITE];
@@ -378,10 +405,10 @@
 		[self startServer];
 	}
 
-	if (okHtml || okPy) {
+	if (okHtml && okPy) {
 		[self showAlertWithTitle:@"Khôi Phục Thành Công" message:@"Đã khôi phục file index.html và server.py về trạng thái gốc của tweak!"];
 	} else {
-		[self showAlertWithTitle:@"Thông Báo" message:@"Không tìm thấy file backup gốc (.default)."];
+		[self showAlertWithTitle:@"Thông Báo" message:@"Không tìm thấy file backup gốc (.default) trong thư mục WazeHUD."];
 	}
 }
 

@@ -1,15 +1,28 @@
 #!/bin/sh
 # postinst cho rootless Dopamine
 
+# 1. Cấp quyền thực thi cho script điều khiển
 if [ -f /var/jb/usr/bin/wazehud-ctrl ]; then
-    chmod 755 /var/jb/usr/bin/wazehud-ctrl
+    chmod 755 /var/jb/usr/bin/wazehud-ctrl 2>/dev/null || true
 fi
 
-# Tự động respring sau khi cài đặt
-if [ -x /var/jb/usr/bin/sbreload ]; then
-    /var/jb/usr/bin/sbreload 2>/dev/null || true
-elif [ -x /var/jb/usr/bin/killall ]; then
-    /var/jb/usr/bin/killall -9 SpringBoard 2>/dev/null || true
+# 2. Cấp quyền cho thư mục dữ liệu WazeHUD
+if [ -d /var/jb/Library/WazeHUD ]; then
+    chmod 777 /var/jb/Library/WazeHUD 2>/dev/null || true
+    chmod 666 /var/jb/Library/WazeHUD/* 2>/dev/null || true
+    chown -R mobile:mobile /var/jb/Library/WazeHUD 2>/dev/null || true
+fi
+
+# 3. Báo cho Sileo / Zebra / Cydia hiển thị nút "Khởi động lại SpringBoard"
+# KHÔNG tự kill/sbreload SpringBoard trực tiếp trong lúc dpkg đang chạy để tránh làm chết Sileo và gây lỗi gián đoạn dpkg
+if [ -n "$SILEO" ]; then
+    SILEO_FD=$(echo "$SILEO" | cut -d' ' -f1)
+    eval "echo 'finish:restart' >&$SILEO_FD" 2>/dev/null || true
+fi
+
+if [ -n "$CYDIA" ]; then
+    CYDIA_FD=$(echo "$CYDIA" | cut -d' ' -f1)
+    eval "echo 'finish:restart' >&$CYDIA_FD" 2>/dev/null || true
 fi
 
 exit 0

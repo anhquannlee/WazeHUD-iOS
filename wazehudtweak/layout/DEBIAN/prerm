@@ -1,0 +1,20 @@
+#!/bin/sh
+# prerm cho rootless Dopamine
+
+# 1. Dừng server nếu đang chạy
+if [ -x /var/jb/usr/bin/wazehud-ctrl ]; then
+    /var/jb/usr/bin/wazehud-ctrl stop 2>/dev/null || true
+fi
+
+# 2. Báo cho Sileo / Zebra / Cydia hiển thị nút "Khởi động lại SpringBoard"
+if [ -n "$SILEO" ]; then
+    SILEO_FD=$(echo "$SILEO" | cut -d' ' -f1)
+    eval "echo 'finish:restart' >&$SILEO_FD" 2>/dev/null || true
+fi
+
+if [ -n "$CYDIA" ]; then
+    CYDIA_FD=$(echo "$CYDIA" | cut -d' ' -f1)
+    eval "echo 'finish:restart' >&$CYDIA_FD" 2>/dev/null || true
+fi
+
+exit 0

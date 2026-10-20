@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000000">
@@ -11,269 +11,212 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
-        body {
+        body, html {
             background-color: #000000;
             color: #ffffff;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-            position: relative;
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            overflow: hidden; 
             transition: background 0.3s, color 0.3s;
         }
 
-        /* --- ÉP NGANG & TRÀN VIỀN 100% --- */
+        /* --- XỬ LÝ XOAY MÀN HÌNH BẰNG CSS & JS --- */
+        #hud-container {
+            position: absolute;
+            top: 0;
+            overflow: hidden;
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+        }
+
         @media screen and (orientation: portrait) {
             #hud-container {
-                position: absolute;
-                top: 0;
                 left: 100vw;
-                width: 100vh;
-                height: 100vw;
-                transform: rotate(90deg);
-                transform-origin: top left;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                padding: 4px 6px;
+                transform: rotate(90deg); 
+                transform-origin: top left; 
+                padding: max(8px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-top));
             }
         }
-
         @media screen and (orientation: landscape) {
             #hud-container {
-                position: absolute;
-                top: 0;
                 left: 0;
-                width: 100vw;
-                height: 100vh;
-                transform: none;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                padding: 4px 6px;
+                transform: none; 
+                padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
             }
         }
 
-        /* --- XỬ LÝ LIGHT MODE KHÔNG MÙ CHỮ --- */
+        /* --- XỬ LÝ LIGHT MODE --- */
         body.day-mode { background-color: #f0f2f5; color: #000000; }
         body.day-mode .top-bar { background: rgba(0, 0, 0, 0.08); border-color: rgba(0,0,0,0.15); color: #222; }
-        body.day-mode .time { color: #0d47a1; }
-        body.day-mode .eta-info { color: #333333; font-weight: 800; }
-        body.day-mode .ping-box { color: #0277bd; }
-
-        body.day-mode .turn-distance { color: #000000; }
+        body.day-mode .time, body.day-mode .ping-box, body.day-mode .speed-unit, body.day-mode .turn-icon { color: #0288d1; }
+        body.day-mode .eta-info { color: #333333; font-weight: 900; }
+        body.day-mode .turn-distance, body.day-mode .speed-val { color: #000000; }
         body.day-mode .turn-street { color: #01579b; font-weight: 900; }
-        
         body.day-mode .current-street { color: #333333 !important; font-weight: 800; }
-        body.day-mode .label-text { color: #757575 !important; font-weight: 600; }
-        
-        /* CHỈNH LẠI NÚT ĐỒNG NHẤT Ở LIGHT MODE */
-        body.day-mode .q-btn { 
-            background: rgba(0,0,0,0.06); 
-            color: #000000; 
-            border-color: rgba(0,0,0,0.2); 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-        }
-        body.day-mode .q-label { color: #333333; font-weight: 800; }
-        body.day-mode .quick-actions { opacity: 0.3; } 
-        body.day-mode .quick-actions.active { opacity: 1; }
-
-        body.day-mode .speed-val { color: #000000; }
+        body.day-mode .label-text { color: #757575 !important; font-weight: 700; }
         body.day-mode .speed-circle { background: radial-gradient(circle, #e3f2fd 0%, #bbdefb 100%); border-color: #1976d2; }
-        body.day-mode .speed-unit { color: #0d47a1; }
-        body.day-mode .turn-panel { background: rgba(0, 0, 0, 0.05); border-color: rgba(0,0,0,0.12); }
-        body.day-mode .turn-icon { color: #0288d1; }
+        body.day-mode .turn-panel, body.day-mode .free-bottom-bar { background: rgba(0, 0, 0, 0.05); border-color: rgba(0,0,0,0.2); }
         body.day-mode .turn-instruction { color: #d32f2f !important; }
+        body.day-mode .quick-actions { background: rgba(255, 255, 255, 0.95); border-color: rgba(0, 0, 0, 0.2); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        body.day-mode .quick-btn-item { color: #333; background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
+        body.day-mode .fab-btn { background: rgba(255,255,255,0.9); border-color: rgba(0,0,0,0.25); color: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
         .mirror-x #hud-inner { transform: scaleX(-1); }
         .mirror-y #hud-inner { transform: rotate(180deg); }
         .mirror-xy #hud-inner { transform: scaleX(-1) rotate(180deg); }
 
-        #hud-inner {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
-            width: 100%;
-            transition: transform 0.3s ease;
+        #hud-inner { display: flex; flex-direction: column; justify-content: space-between; height: 100%; width: 100%; transition: transform 0.3s ease; }
+
+        .tabular { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
+        /* --- TYPOGRAPHY MẶC ĐỊNH --- */
+        .turn-icon { font-size: clamp(3.5rem, 13vmin, 6rem); line-height: 1; color: #00e5ff; }
+        .turn-distance { font-size: clamp(3.5rem, 11vmin, 6rem); font-weight: 900; color: #ffffff; letter-spacing: -2px; line-height: 1; }
+        .turn-street { font-size: clamp(1.2rem, 4vmin, 1.8rem); font-weight: 900; color: #00e5ff; margin-top: 4px; line-height: 1.25; }
+        .current-street { font-size: clamp(1rem, 3.2vmin, 1.4rem); font-weight: 800; color: #cfd8dc; margin-top: 4px; line-height: 1.25; }
+        .label-text { font-size: 0.75em; font-weight: 700; color: #b0bec5; margin-right: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .limit-circle { width: clamp(130px, 30vmin, 180px); height: clamp(130px, 30vmin, 180px); background-color: #ffffff; border: clamp(8px, 2.5vmin, 14px) solid #ff1744; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 15px rgba(255, 23, 68, 0.4); }
+        .limit-val { font-size: clamp(3.8rem, 8.5vmin, 5.5rem); font-weight: 900; color: #000000; line-height: 1; }
+        
+        .speed-circle { width: clamp(140px, 34vmin, 210px); height: clamp(140px, 34vmin, 210px); background: radial-gradient(circle, #1a237e 0%, #0d1117 100%); border: clamp(6px, 2vmin, 10px) solid #651fff; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 15px rgba(101, 31, 255, 0.4); transition: border-color 0.2s ease;}
+        .speed-val { font-size: clamp(4.5rem, 11.5vmin, 7rem); font-weight: 900; line-height: 1; color: #ffffff; letter-spacing: -1px; }
+        .speed-val.small-text { font-size: clamp(2.8rem, 8vmin, 4.5rem); }
+        .speed-unit { font-size: clamp(0.8rem, 2.2vmin, 1.1rem); color: #b388ff; margin-top: 4px; font-weight: 900; letter-spacing: 1.5px; }
+
+        /* --- CỠ TO --- */
+        .size-l .turn-icon { font-size: clamp(4.5rem, 15vmin, 7rem); }
+        .size-l .turn-distance { font-size: clamp(4.2rem, 13vmin, 7rem); }
+        .size-l .turn-street { font-size: clamp(1.4rem, 4.5vmin, 2rem); }
+        .size-l .limit-circle { width: clamp(150px, 34vmin, 220px); height: clamp(150px, 34vmin, 220px); border-width: clamp(10px, 3vmin, 16px); }
+        .size-l .limit-val { font-size: clamp(4.5rem, 10vmin, 6.8rem); }
+        .size-l .speed-circle { width: clamp(170px, 40vmin, 260px); height: clamp(170px, 40vmin, 260px); }
+        .size-l .speed-val { font-size: clamp(5.5rem, 14vmin, 8.5rem); }
+
+        /* --- CỠ CỰC ĐẠI --- */
+        .size-xl .turn-icon { font-size: clamp(5rem, 17vmin, 8.5rem); }
+        .size-xl .turn-distance { font-size: clamp(5rem, 15vmin, 8.5rem); }
+        .size-xl .turn-street { font-size: clamp(1.6rem, 5.5vmin, 2.5rem); }
+        .size-xl .limit-circle { width: clamp(170px, 38vmin, 250px); height: clamp(170px, 38vmin, 250px); border-width: clamp(12px, 3.5vmin, 20px); }
+        .size-xl .limit-val { font-size: clamp(5.5rem, 12vmin, 8rem); }
+        .size-xl .speed-circle { width: clamp(210px, 45vmin, 310px); height: clamp(210px, 45vmin, 310px); }
+        .size-xl .speed-val { font-size: clamp(6.8rem, 16vmin, 10.5rem); }
+
+        /* --- CẢNH BÁO TỐC ĐỘ --- */
+        .speed-circle.warning-active { border-color: #ff1744 !important; animation: pulse-border-red 0.4s infinite alternate; }
+        .speed-val.warning-active { color: #ff1744 !important; animation: pulse-text-red 0.4s infinite alternate; }
+        @keyframes pulse-border-red { 0% { box-shadow: 0 0 10px rgba(255, 23, 68, 0.4); } 100% { box-shadow: 0 0 45px rgba(255, 23, 68, 0.95); } }
+        @keyframes pulse-text-red { 0% { text-shadow: 0 0 5px rgba(255, 23, 68, 0.2); } 100% { text-shadow: 0 0 25px rgba(255, 23, 68, 0.9); } }
+
+        /* THANH TOP BAR */
+        .top-bar { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: rgba(255, 255, 255, 0.05); padding: clamp(4px, 1.2vmin, 8px) 12px; 
+            border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15); margin-bottom: 8px; min-height: 38px; flex-shrink: 0;
         }
-
-        /* --- SIZE TO (MẶC ĐỊNH) --- */
-        .turn-icon { font-size: 3.5rem; line-height: 1; color: #00e5ff; }
-        .turn-distance { font-size: 3.4rem; font-weight: 900; color: #ffffff; letter-spacing: -1.5px; }
+        .status-container { width: 120px; display: flex; align-items: center; justify-content: flex-start; }
+        .ping-box { display: flex; align-items: center; gap: 4px; font-size: clamp(0.85rem, 2.2vmin, 1rem); color: #90caf9; font-weight: 800; }
         
-        .turn-street { font-size: 1.3rem; font-weight: 800; color: #00e5ff; margin-top: 2px; }
-        .current-street { font-size: 0.95rem; font-weight: 700; color: #cfd8dc; margin-top: 2px; }
-        .label-text { font-size: 0.75em; font-weight: 600; color: #b0bec5; margin-right: 4px; text-transform: uppercase; letter-spacing: 0.5px;}
-
-        .limit-circle { width: 140px; height: 140px; background-color: #ffffff; border: 12px solid #ff1744; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 15px rgba(255, 23, 68, 0.3); }
-        .limit-val { font-size: 3.8rem; font-weight: 900; color: #000000; line-height: 1; }
+        .center-info { flex: 1; display: flex; justify-content: center; align-items: center; gap: 10px; font-size: clamp(0.9rem, 2.5vmin, 1.2rem); font-weight: 800; white-space: nowrap; }
+        .right-spacer { width: 120px; }
         
-        .speed-circle { width: 155px; height: 155px; background: radial-gradient(circle, #1a237e 0%, #0d1117 100%); border: 6px solid #651fff; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 15px rgba(101, 31, 255, 0.3); }
-        .speed-val { font-size: 4.6rem; font-weight: 900; line-height: 1; color: #ffffff; }
-
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 4px;
-        }
-        
-        .status-container { display: flex; align-items: center; gap: 12px; }
-        .ping-box { display: flex; align-items: center; gap: 4px; font-size: 0.8rem; color: #90caf9; font-weight: 700; }
-        .center-info { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 700; }
         .time { color: #90caf9; }
         .eta-info { color: #e0e0e0; }
 
-        /* --- SIZE CỰC ĐẠI --- */
-        .size-xl .top-bar { padding: 6px 12px; }
-        .size-xl .ping-box { font-size: 0.95rem; }
+        .main-content { display: flex; justify-content: space-between; align-items: stretch; flex: 1; min-height: 0; padding: 0; gap: 12px; padding-bottom: 2px; overflow: hidden; }
+
+        .turn-panel { display: flex; flex-direction: column; justify-content: space-evenly; align-items: center; text-align: center; flex: 1.4; min-height: 0; background: rgba(255, 255, 255, 0.03); padding: 8px 12px; border-radius: 12px; border: 2px solid rgba(255, 255, 255, 0.25); box-shadow: 0 4px 15px rgba(255,255,255,0.03); position: relative; overflow: hidden; }
+        .roundabout-exit { position: absolute; top: 12px; right: 12px; background: #ff9800; color: #000; font-weight: 900; font-size: clamp(0.85rem, 2.5vmin, 1.1rem); padding: 4px 10px; border-radius: 6px; }
+        .turn-header { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; flex-shrink: 0; }
+        .turn-instruction { font-size: clamp(1.3rem, 4vmin, 1.8rem); font-weight: 900; color: #ffeb3b; }
+        .turn-info-box { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 4px; overflow: hidden; }
         
-        .size-xl .turn-icon { font-size: 4rem; }
-        .size-xl .turn-distance { font-size: 4.2rem; }
-        .size-xl .turn-street { font-size: 1.5rem; }
-        .size-xl .current-street { font-size: 1.15rem; }
+        .turn-street, .current-street { width: 100%; white-space: normal; word-wrap: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        .size-xl .limit-circle { width: 165px; height: 165px; border-width: 14px; }
-        .size-xl .limit-val { font-size: 4.6rem; }
-        
-        .size-xl .speed-circle { width: 185px; height: 185px; border-width: 8px; }
-        .size-xl .speed-val { font-size: 5.6rem; }
+        .limit-panel { display: flex; flex-direction: column; justify-content: space-evenly; align-items: center; flex: 0.8; gap: 8px; min-height: 0; }
 
-        .main-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex: 1;
-            padding: 0;
-            gap: 5px;
-        }
-
-        .turn-panel {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            flex: 1.3;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            position: relative;
-        }
-
-        .roundabout-exit { position: absolute; top: 4px; right: 6px; background: #ff9800; color: #000; font-weight: 900; font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; }
-        .turn-header { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 2px; width: 100%; }
-        .turn-instruction { font-size: 1.2rem; font-weight: 900; color: #ffeb3b; }
-        .turn-info-box { display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 2px; }
-        .turn-street, .current-street { width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        .limit-panel { display: flex; flex-direction: column; justify-content: center; align-items: center; flex: 0.8; gap: 8px; }
-
-        #alert-banner {
-            background: linear-gradient(135deg, #e53935 0%, #c62828 100%); color: #ffffff; padding: 5px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 800; display: flex; align-items: center; gap: 6px; width: max-content; max-width: 100%; justify-content: center; border: 1px solid rgba(255,255,255,0.4); animation: pulse-alert 1s infinite alternate;
-        }
-        @keyframes pulse-alert { 0% { transform: scale(1); } 100% { transform: scale(1.02); } }
+        #alert-banner { background: linear-gradient(135deg, #8e0000 0%, #4a0000 100%); color: #ffffff; width: 95%; padding: 4px 8px; border-radius: 10px; font-size: clamp(1.1rem, 3.5vmin, 1.6rem); font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 8px; white-space: normal; text-align: center; line-height: 1.15; border: 2px solid rgba(255, 255, 255, 0.7); animation: pulse-alert 1s infinite alternate; box-shadow: 0 4px 15px rgba(0,0,0,0.6); flex-shrink: 0; }
+        @keyframes pulse-alert { 0% { transform: scale(1); } 100% { transform: scale(1.03); } }
         .hidden { display: none !important; }
 
-        .speed-panel { display: flex; flex-direction: column; align-items: center; flex: 1; }
-        .speed-unit { font-size: 0.85rem; color: #b388ff; margin-top: 2px; font-weight: 800; letter-spacing: 1px; }
+        .speed-panel { display: flex; flex-direction: column; justify-content: center; align-items: center; flex: 1; min-height: 0; }
 
         body.free-drive-mode .turn-panel { display: none !important; }
         body.free-drive-mode .limit-panel, body.free-drive-mode .speed-panel { flex: 1; }
         
-        .free-bottom-bar { display: none; width: 100%; text-align: center; padding: 6px 0; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08); margin-top: 4px; }
+        .free-bottom-bar { display: none; width: 100%; text-align: center; padding: 12px 0; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 2px solid rgba(255, 255, 255, 0.25); margin-top: 4px; }
         body.free-drive-mode .free-bottom-bar { display: block; }
-        body.day-mode .free-bottom-bar { background: rgba(0, 0, 0, 0.05); border-color: rgba(0,0,0,0.12); }
-        .free-bottom-bar .turn-street { font-size: 1.4rem; color: #00e5ff; }
-        .size-xl .free-bottom-bar .turn-street { font-size: 1.8rem; }
+        .free-bottom-bar .turn-street { font-size: clamp(1.4rem, 4.5vmin, 2rem); color: #00e5ff; }
 
-        .ip-highlight { color: #00e676 !important; font-family: monospace; font-size: 1.5rem !important; font-weight: 900 !important; letter-spacing: 0.5px; user-select: all; }
+        .ip-highlight { color: #00e676 !important; font-family: monospace; font-weight: 900 !important; letter-spacing: 0.5px; user-select: all; }
 
-        /* --- 6 NÚT CỐ ĐỊNH (MÀU ĐỒNG NHẤT, SANG TRỌNG) --- */
-        .quick-actions-wrapper {
-            position: absolute;
-            bottom: 4px;
-            right: 8px;
-            z-index: 1000;
-        }
+        /* --- MENU FLOATING ACTION BUTTON --- */
+        .quick-actions-wrapper { position: absolute; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; pointer-events: auto; }
         
-        .quick-actions {
-            display: flex;
-            gap: 12px;
-            opacity: 0.15;
-            transition: opacity 0.4s ease;
-        }
-        .quick-actions.active { opacity: 1; }
-        .quick-btn-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; background: none; border: none; }
-        
-        /* CHỈNH LẠI NÚT ĐỒNG NHẤT Ở DARK MODE */
-        .q-btn { 
-            width: 34px; 
-            height: 34px; 
-            border-radius: 50%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            color: #ffffff; 
-            background: rgba(255, 255, 255, 0.12); /* Trắng mờ sang trọng */
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(4px);
-        }
+        .fab-btn { width: 50px; height: 50px; border-radius: 50%; background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.4); color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(6px); transition: transform 0.2s, background 0.2s; flex-shrink: 0;}
+        .fab-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.3); }
 
-        .q-label { font-size: 0.6rem; color: #b0bec5; margin-top: 4px; font-weight: 700; white-space: nowrap; }
+        .quick-actions { display: none; flex-direction: column; background: rgba(20, 20, 20, 0.85); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 12px; padding: clamp(4px, 1.2vmin, 8px); gap: clamp(2px, 1vmin, 6px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); transform-origin: bottom right; animation: menuPop 0.15s ease-out forwards; max-height: calc(100vmin - 90px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .quick-actions::-webkit-scrollbar { display: none; }
+        .quick-actions.active { display: flex; }
+        @keyframes menuPop { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
 
-        svg.lucide { width: 20px; height: 20px; stroke-width: 2.5; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-        .alert-icon svg.lucide { width: 22px; height: 22px; stroke-width: 2; margin-right: 4px;}
-        .ping-icon svg.lucide { width: 16px; height: 16px; stroke-width: 2.5; }
-        .batt-icon svg.lucide { width: 18px; height: 18px; stroke-width: 2; fill: currentColor;}
-        .nav-icon svg.lucide { width: 46px; height: 46px; stroke-width: 2.5; }
+        .quick-btn-item { display: flex; flex-direction: row; align-items: center; gap: clamp(6px, 1.5vmin, 12px); width: 100%; min-width: clamp(170px, 35vmax, 220px); padding: clamp(6px, 1.5vmin, 10px) clamp(10px, 2vmin, 14px); background: rgba(255,255,255,0.08); border-radius: 8px; color: white; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-family: inherit; text-align: left; transition: background 0.2s; flex-shrink: 0; }
+        .quick-btn-item:active { background: rgba(255,255,255,0.2); }
+        .quick-btn-item .q-label { font-weight: 800; flex: 1; font-size: clamp(0.75rem, 2.5vmin, 0.95rem); }
+        .quick-btn-item svg.lucide { width: clamp(16px, 3.5vmin, 22px); height: clamp(16px, 3.5vmin, 22px); }
 
-        .icon-sun { display: block; }
-        .icon-moon { display: none; }
-        body.day-mode .icon-sun { display: none; }
-        body.day-mode .icon-moon { display: block; }
+        svg.lucide { width: 22px; height: 22px; stroke-width: 2.5; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        .alert-icon svg.lucide { width: 34px; height: 34px; stroke-width: 2.5; margin-right: 2px;}
+        .ping-icon svg.lucide { width: 18px; height: 18px; stroke-width: 3; }
+        .nav-icon svg.lucide { width: 1em; height: 1em; stroke-width: 3; }
+
+        .icon-sun { display: block; } .icon-moon { display: none; }
+        body.day-mode .icon-sun { display: none; } body.day-mode .icon-moon { display: block; }
     </style>
 </head>
-<body onclick="wakeUpControls()" ontouchstart="wakeUpControls()">
+<body>
+
+    <!-- VIDEO ẨN ÉP SÁNG MÀN HÌNH TẤT CẢ ĐỜI IOS -->
+    <video id="keepAwakeVideo" playsinline loop muted hidden>
+        <source src="data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28yYXZjMQAAAAhmcmVlAAAAG21kYXQAAAGzABAHAAABthAAABsQAAAAMcOQwwcAAAAAAASsY292YWcBAAAAEG1vb3YAAABsbXZoZAAAAADamTAw2pkwMAAABAAAAAABAAABAAABAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAh0cmFrAAAAXHRraGQAAAAD2pkwMNqZMDAAAAABAAAAAAAABAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAEgAAAAAEAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAABAAAAAAAEAAAAAAABobWRpYQAAACBtZGhkAAAAANqZMDDamTAwAAACAAAAAAABACxIQU5EAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAADg21pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAwNzdGJsAAAAMHN0c2QAAAAAAAAAAQAAACBhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAAAAAgAAAAAAAAAAAAAAAH8AAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABjAAAALnN0dHMAAAAAAAAAAQAAAAEAAAQAAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAABAAAAAQAAACRzdHN6AAAAAAAAAAAAAAABAAAALgAAABRzdGNvAAAAAAAAAAEAAAAwAAAAGHN0c3MAAAAAAAAAAQAAAAEAAA==" type="video/mp4">
+    </video>
 
     <div id="hud-container">
         <div id="hud-inner">
+            
             <div class="top-bar">
                 <div class="status-container">
                     <div class="ping-box" id="ping-info">
                         <span class="ping-icon"><svg class="lucide" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" x2="12.01" y1="20" y2="20"/></svg></span>
-                        <span id="ping-val">-- ms</span>
+                        <span id="ping-val" class="tabular">-- ms</span>
                     </div>
                 </div>
                 
-                <div class="center-info">
+                <div class="center-info tabular">
                     <span class="time" id="clock">00:00:00</span>
                     <span>•</span>
                     <span class="eta-info" id="eta-text">Đang di chuyển tự do</span>
                 </div>
-                <div style="width: 50px;"></div>
+
+                <div class="right-spacer"></div>
             </div>
 
             <div class="main-content">
                 <div class="turn-panel" id="turn-panel">
                     <div class="roundabout-exit hidden" id="exit-badge">Lối ra số 1</div>
-                    
                     <div class="turn-header" id="nav-header">
                         <div class="turn-icon nav-icon" id="turn-icon">
                             <svg class="lucide" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         </div>
                         <div class="turn-instruction" id="turn-instruction">Chờ kết nối...</div>
                     </div>
-
                     <div class="turn-info-box">
-                        <div class="turn-distance hidden" id="distance">--- m</div>
+                        <div class="turn-distance tabular hidden" id="distance">--- m</div>
                         <div class="turn-street ip-highlight" id="street">Đang tải...</div>
                         <div class="current-street" id="current-street" style="display:block;">Nhập link xanh vào App Waze Mod</div>
                     </div>
@@ -281,7 +224,7 @@
 
                 <div class="limit-panel">
                     <div class="limit-circle hidden" id="limit-box">
-                        <div class="limit-val" id="limit">0</div>
+                        <div class="limit-val tabular" id="limit">0</div>
                     </div>
                     <div id="alert-banner" class="hidden">
                         <span class="alert-icon" id="alert-icon"><svg class="lucide" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg></span>
@@ -290,8 +233,8 @@
                 </div>
 
                 <div class="speed-panel">
-                    <div class="speed-circle">
-                        <div class="speed-val" id="speed">0</div>
+                    <div class="speed-circle" id="speed-circle">
+                        <div class="speed-val tabular" id="speed">0</div>
                         <div class="speed-unit">KM/H</div>
                     </div>
                 </div>
@@ -303,141 +246,164 @@
         </div>
         
         <div class="quick-actions-wrapper">
-            <div class="quick-actions" id="quick-menu" onclick="event.stopPropagation()">
-                <button class="quick-btn-item" onclick="toggleFullScreen()">
-                    <div class="q-btn"><svg class="lucide" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></div>
-                    <span class="q-label">Toàn màn</span>
+            <div class="quick-actions" id="quick-menu">
+                <button class="quick-btn-item" onclick="toggleKeepAwake()">
+                    <svg class="lucide" viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+                    <span class="q-label" id="awake-label" style="color: #00e676;">M.Hình: LUÔN SÁNG</span>
                 </button>
-                <button class="quick-btn-item" onclick="toggleMirror('mirror-x')">
-                    <div class="q-btn"><svg class="lucide" viewBox="0 0 24 24"><polyline points="15 3 21 9 15 15"/><polyline points="9 21 3 15 9 9"/><line x1="21" x2="11" y1="9" y2="9"/><line x1="3" x2="13" y1="15" y2="15"/></svg></div>
-                    <span class="q-label">Lật Gương</span>
+                <button class="quick-btn-item" onclick="toggleSpeedWarning()">
+                    <svg class="lucide" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                    <span class="q-label" id="speed-warn-label" style="color: #b0bec5;">C.Báo Vượt: TẮT</span>
                 </button>
-                <button class="quick-btn-item" onclick="toggleMirror('mirror-y')">
-                    <div class="q-btn"><svg class="lucide" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></div>
-                    <span class="q-label">Lật 180°</span>
+                <button class="quick-btn-item" onclick="cycleSize()">
+                    <svg class="lucide" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+                    <span class="q-label" id="size-label" style="color: #b0bec5;">Kích cỡ: Vừa</span>
                 </button>
                 <button class="quick-btn-item" onclick="toggleTheme()">
-                    <div class="q-btn">
-                        <svg class="lucide icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-                        <svg class="lucide icon-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-                    </div>
-                    <span class="q-label">Giao Diện</span>
+                    <svg class="lucide icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                    <svg class="lucide icon-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                    <span class="q-label">Giao diện (Ngày/Đêm)</span>
                 </button>
-                <button class="quick-btn-item" onclick="cycleLayoutSize()">
-                    <div class="q-btn"><svg class="lucide" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></svg></div>
-                    <span class="q-label" id="size-label">Cỡ Thường</span>
+                <button class="quick-btn-item" onclick="toggleMirror('mirror-x')">
+                    <svg class="lucide" viewBox="0 0 24 24"><polyline points="15 3 21 9 15 15"/><polyline points="9 21 3 15 9 9"/><line x1="21" x2="11" y1="9" y2="9"/><line x1="3" x2="13" y1="15" y2="15"/></svg>
+                    <span class="q-label">Lật Gương (Ngang)</span>
+                </button>
+                <button class="quick-btn-item" onclick="toggleMirror('mirror-y')">
+                    <svg class="lucide" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    <span class="q-label">Lật 180° (Dọc)</span>
                 </button>
                 <button class="quick-btn-item" onclick="window.location.reload()">
-                    <div class="q-btn"><svg class="lucide" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></div>
-                    <span class="q-label">Làm mới</span>
+                    <svg class="lucide" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    <span class="q-label">Làm mới hệ thống</span>
                 </button>
             </div>
+            
+            <button class="fab-btn" id="fab-btn" onclick="toggleMenu(event)">
+                <svg class="lucide" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </button>
         </div>
     </div>
 
     <script>
-        const hostIp = window.location.hostname;
-        let wazeConnectUrl = "";
-        
-        if (hostIp === "" || hostIp === "localhost" || hostIp === "127.0.0.1") {
-            wazeConnectUrl = `ws://127.0.0.1:8765/hlp`;
-        } else {
-            wazeConnectUrl = `ws://${hostIp}:8765/hlp`;
+        function resizeHUD() {
+            const container = document.getElementById('hud-container');
+            const isPortrait = window.innerHeight > window.innerWidth;
+            if (isPortrait) {
+                container.style.width = window.innerHeight + 'px';
+                container.style.height = window.innerWidth + 'px';
+            } else {
+                container.style.width = window.innerWidth + 'px';
+                container.style.height = window.innerHeight + 'px';
+            }
         }
+        window.addEventListener('resize', resizeHUD);
+        resizeHUD();
 
+        const hostIp = window.location.hostname;
+        let wazeConnectUrl = `ws://${hostIp === "" || hostIp === "localhost" || hostIp === "127.0.0.1" ? "127.0.0.1" : hostIp}:8765/hlp`;
         document.getElementById('street').innerText = wazeConnectUrl;
         document.getElementById('street-free').innerText = wazeConnectUrl;
 
-        const sizes = ['', 'size-xl'];
-        const sizeNames = ['To', 'Cực Đại'];
-        let currentSizeIdx = 0;
-        let hideTimer = null;
-        let wakeLock = null;
         let lastPingTime = 0;
+        let isMirrorX = false, isMirrorY = false;
+        let isSpeedWarningEnabled = false;
+        let currentSpd = 0, currentLim = 0;
 
-        let isMirrorX = false;
-        let isMirrorY = false;
+        function toggleMenu(e) {
+            e.stopPropagation();
+            document.getElementById('quick-menu').classList.toggle('active');
+        }
 
-        async function keepScreenOn() {
-            if ('wakeLock' in navigator && wakeLock === null) {
+        let isKeepAwake = true;
+        let wakeLock = null;
+        const wakeVideo = document.getElementById('keepAwakeVideo');
+
+        async function requestWakeLock() {
+            if (!isKeepAwake) return;
+            if (wakeVideo.paused) { wakeVideo.play().catch(() => {}); }
+            if ('wakeLock' in navigator) {
                 try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    wakeLock.addEventListener('release', () => { wakeLock = null; });
+                    if (wakeLock === null) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                        wakeLock.addEventListener('release', () => { wakeLock = null; });
+                    }
                 } catch (err) {}
             }
         }
 
-        function toggleFullScreen() {
-            if (!document.fullscreenElement) {
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                } else if (document.documentElement.webkitRequestFullscreen) {
-                    document.documentElement.webkitRequestFullscreen();
-                }
+        function releaseWakeLock() {
+            wakeVideo.pause();
+            if (wakeLock !== null) { wakeLock.release().then(() => { wakeLock = null; }); }
+        }
+
+        function toggleKeepAwake() {
+            isKeepAwake = !isKeepAwake;
+            const lbl = document.getElementById('awake-label');
+            if (isKeepAwake) {
+                lbl.innerText = "M.Hình: LUÔN SÁNG";
+                lbl.style.color = "#00e676";
+                requestWakeLock();
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
-            }
-            wakeUpControls();
-        }
-
-        function wakeUpControls() {
-            const menu = document.getElementById('quick-menu');
-            menu.classList.add('active');
-            keepScreenOn();
-            clearTimeout(hideTimer);
-            hideTimer = setTimeout(() => {
-                menu.classList.remove('active');
-            }, 3000);
-        }
-
-        wakeUpControls();
-
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-
-        function updateMirrorClass() {
-            const container = document.getElementById('hud-container');
-            container.classList.remove('mirror-x', 'mirror-y', 'mirror-xy');
-            
-            if (isMirrorX && isMirrorY) {
-                container.classList.add('mirror-xy');
-            } else if (isMirrorX) {
-                container.classList.add('mirror-x');
-            } else if (isMirrorY) {
-                container.classList.add('mirror-y');
+                lbl.innerText = "M.Hình: MẶC ĐỊNH";
+                lbl.style.color = "#b0bec5";
+                releaseWakeLock();
             }
         }
 
+        document.body.addEventListener('click', (e) => {
+            requestWakeLock();
+            if (!e.target.closest('.quick-actions-wrapper')) {
+                document.getElementById('quick-menu').classList.remove('active');
+            }
+        });
+        document.body.addEventListener('touchstart', () => { requestWakeLock(); }, {passive: true});
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && isKeepAwake) requestWakeLock();
+        });
+
+        function updateClock() { document.getElementById('clock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+        setInterval(updateClock, 1000); updateClock();
+
+        /* FIX CHÍNH LÀ Ở ĐÂY: Trỏ lệnh lật gương đúng vào id "hud-container" */
         function toggleMirror(type) {
             if (type === 'mirror-x') isMirrorX = !isMirrorX;
             if (type === 'mirror-y') isMirrorY = !isMirrorY;
-            updateMirrorClass();
-            wakeUpControls();
+            const container = document.getElementById('hud-container'); 
+            container.classList.remove('mirror-x', 'mirror-y', 'mirror-xy');
+            if (isMirrorX && isMirrorY) container.classList.add('mirror-xy');
+            else if (isMirrorX) container.classList.add('mirror-x');
+            else if (isMirrorY) container.classList.add('mirror-y');
         }
 
-        function toggleTheme() {
-            document.body.classList.toggle('day-mode');
-            wakeUpControls();
+        function toggleTheme() { document.body.classList.toggle('day-mode'); }
+
+        function toggleSpeedWarning() {
+            isSpeedWarningEnabled = !isSpeedWarningEnabled;
+            const lbl = document.getElementById('speed-warn-label');
+            lbl.innerText = isSpeedWarningEnabled ? "C.Báo Vượt: BẬT" : "C.Báo Vượt: TẮT";
+            lbl.style.color = isSpeedWarningEnabled ? "#ff1744" : "#b0bec5";
+            checkSpeedWarning();
         }
 
-        function cycleLayoutSize() {
+        let sizeState = 0;
+        function cycleSize() {
+            sizeState = (sizeState + 1) % 3;
             const container = document.getElementById('hud-inner');
-            sizes.forEach(s => { if(s) container.classList.remove(s); });
+            const lbl = document.getElementById('size-label');
+            container.classList.remove('size-l', 'size-xl');
             
-            currentSizeIdx = (currentSizeIdx + 1) % sizes.length;
-            if (sizes[currentSizeIdx]) {
-                container.classList.add(sizes[currentSizeIdx]);
+            if (sizeState === 1) { container.classList.add('size-l'); lbl.innerText = "Kích cỡ: To"; lbl.style.color = "#ffffff"; }
+            else if (sizeState === 2) { container.classList.add('size-xl'); lbl.innerText = "Kích cỡ: Cực Đại"; lbl.style.color = "#ffeb3b"; }
+            else { lbl.innerText = "Kích cỡ: Vừa"; lbl.style.color = "#b0bec5"; }
+        }
+
+        function checkSpeedWarning() {
+            const sc = document.getElementById('speed-circle'), sv = document.getElementById('speed');
+            if (isSpeedWarningEnabled && currentLim > 0 && currentSpd > currentLim) {
+                sc.classList.add('warning-active'); sv.classList.add('warning-active');
+            } else {
+                sc.classList.remove('warning-active'); sv.classList.remove('warning-active');
             }
-            document.getElementById('size-label').innerText = sizeNames[currentSizeIdx];
-            wakeUpControls();
         }
 
         const IconStraight = `<svg class="lucide" viewBox="0 0 24 24"><line x1="12" x2="12" y1="20" y2="4"/><polyline points="5 11 12 4 19 11"/></svg>`;
@@ -445,10 +411,9 @@
         const IconRight = `<svg class="lucide" viewBox="0 0 24 24"><polyline points="15 6 20 11 15 16"/><path d="M4 21v-6a4 4 0 0 1 4-4h12"/></svg>`;
         const IconSlightLeft = `<svg class="lucide" viewBox="0 0 24 24"><polyline points="8 5 3 10 8 15"/><path d="M3 10h8c3.3 0 6 2.7 6 6v4"/></svg>`;
         const IconSlightRight = `<svg class="lucide" viewBox="0 0 24 24"><polyline points="16 5 21 10 16 15"/><path d="M21 10h-8c-3.3 0-6 2.7-6 6v4"/></svg>`;
-        const IconUTurn = `<svg class="lucide" viewBox="0 0 24 24"><path d="M9 10V5a2 2 0 0 1 4 0v14"/><polyline points="5 14 9 18 13 14"/></svg>`;
+        const IconUTurn = `<svg class="lucide" viewBox="0 0 24 24"><path d="M18 20V9a6 6 0 0 0-12 0v8"/><polyline points="2 13 6 17 10 13"/></svg>`; 
         const IconRoundabout = `<svg class="lucide" viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0-9-9"/><path d="M12 12h.01"/><polyline points="12 17 12 21 16 21"/></svg>`;
         const IconArrive = `<svg class="lucide" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>`;
-
         const IconPolice = `<svg class="lucide" viewBox="0 0 24 24"><path d="m12 3-8 3v5c0 4.2 3.1 8 8 10 4.9-2 8-5.8 8-10V6Z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>`;
         const IconCamera = `<svg class="lucide" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><circle cx="12" cy="12" r="4"/><path d="M12 8v.01"/></svg>`;
         const IconTrafficLight = `<svg class="lucide" viewBox="0 0 24 24"><rect width="8" height="18" x="8" y="3" rx="4"/><circle cx="12" cy="8" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="16" r="1"/></svg>`;
@@ -459,121 +424,68 @@
         ws.onmessage = (event) => {
             try {
                 let now = Date.now();
-                if (lastPingTime > 0) {
-                    let pingValue = now - lastPingTime;
-                    document.getElementById('ping-val').innerText = `${pingValue} ms`;
-                }
+                if (lastPingTime > 0) document.getElementById('ping-val').innerText = `${now - lastPingTime} ms`;
                 lastPingTime = now;
-
                 const data = JSON.parse(event.data);
 
                 if (data.type === "sys_info") {
-                    const realWazeUrl = `ws://${data.ip}:8765/hlp`;
-                    document.getElementById('street').innerText = realWazeUrl;
-                    document.getElementById('street-free').innerText = realWazeUrl;
+                    const realUrl = `ws://${data.ip}:8765/hlp`;
+                    document.getElementById('street').innerText = realUrl; document.getElementById('street-free').innerText = realUrl;
                     return; 
                 }
                 
-                if (data.host_batt !== undefined) {
-                    document.getElementById('batt-val').innerText = `${data.host_batt}%`;
-                }
-
                 if (data.t === 's') {
-                    document.getElementById('street').classList.remove('ip-highlight');
-                    document.getElementById('street-free').classList.remove('ip-highlight');
+                    document.getElementById('street').classList.remove('ip-highlight'); document.getElementById('street-free').classList.remove('ip-highlight');
 
                     let isNavigating = (data.nav === 1);
-                    if (isNavigating) {
-                        document.body.classList.remove('free-drive-mode');
-                    } else {
-                        document.body.classList.add('free-drive-mode');
-                    }
+                    if (isNavigating) document.body.classList.remove('free-drive-mode'); else document.body.classList.add('free-drive-mode');
 
                     if (data.spd !== undefined) {
-                        document.getElementById('speed').innerText = data.spd;
+                        currentSpd = data.spd;
+                        const speedEl = document.getElementById('speed'); 
+                        speedEl.innerText = currentSpd;
+                        if (String(currentSpd).length > 3) speedEl.classList.add('small-text'); else speedEl.classList.remove('small-text');
                     }
                     
                     const limitBox = document.getElementById('limit-box');
                     if (data.lim !== undefined && data.lim > 0) {
-                        document.getElementById('limit').innerText = data.lim;
-                        limitBox.classList.remove('hidden');
-                    } else {
-                        limitBox.classList.add('hidden');
-                    }
+                        currentLim = data.lim; document.getElementById('limit').innerText = currentLim; limitBox.classList.remove('hidden');
+                    } else { currentLim = 0; limitBox.classList.add('hidden'); }
+                    checkSpeedWarning();
 
-                    const distElem = document.getElementById('distance');
-                    const navHeader = document.getElementById('nav-header');
-
+                    const distElem = document.getElementById('distance'), navHeader = document.getElementById('nav-header');
                     if (data.dst !== undefined && data.dst >= 0 && isNavigating) {
-                        let dstText = data.dst >= 1000 ? (data.dst / 1000).toFixed(1) + " km" : data.dst + " m";
-                        distElem.innerText = dstText;
-                        distElem.classList.remove('hidden');
-                        navHeader.classList.remove('hidden');
-                    } else {
-                        distElem.classList.add('hidden');
-                        navHeader.classList.add('hidden');
-                    }
+                        distElem.innerText = data.dst >= 1000 ? (data.dst / 1000).toFixed(1) + " km" : data.dst + " m";
+                        distElem.classList.remove('hidden'); navHeader.classList.remove('hidden');
+                    } else { distElem.classList.add('hidden'); navHeader.classList.add('hidden'); }
 
-                    let st1 = (data.st || "").trim();
-                    let st2 = (data.st2 || "").trim();
-                    
-                    const streetEl = document.getElementById('street');
-                    const curStreetEl = document.getElementById('current-street');
-                    const freeStreetEl = document.getElementById('street-free');
+                    let st1 = (data.st || "").trim(), st2 = (data.st2 || "").trim();
+                    const streetEl = document.getElementById('street'), curStreetEl = document.getElementById('current-street'), freeStreetEl = document.getElementById('street-free');
 
                     if (st2 !== "" && isNavigating) {
                         streetEl.innerHTML = `<span class="label-text">Tiếp theo:</span>${st2}`;
-                        if (st1 !== "" && st1.toLowerCase() !== st2.toLowerCase()) {
-                            curStreetEl.innerHTML = `<span class="label-text">Hiện tại:</span>${st1}`;
-                            curStreetEl.style.display = "block";
-                        } else {
-                            curStreetEl.style.display = "none";
-                        }
+                        if (st1 !== "" && st1.toLowerCase() !== st2.toLowerCase()) { curStreetEl.innerHTML = `<span class="label-text">Hiện tại:</span>${st1}`; curStreetEl.style.display = "-webkit-box"; }
+                        else { curStreetEl.style.display = "none"; }
                     } else {
-                        if (st1 !== "") {
-                            streetEl.innerHTML = `<span class="label-text">Hiện tại:</span>${st1}`;
-                        } else {
-                            streetEl.innerHTML = "Đang định vị...";
-                        }
-                        curStreetEl.style.display = "none";
+                        streetEl.innerHTML = st1 !== "" ? `<span class="label-text">Hiện tại:</span>${st1}` : "Đang định vị..."; curStreetEl.style.display = "none";
                     }
+                    freeStreetEl.innerHTML = st1 !== "" ? `<span class="label-text">Hiện tại:</span>${st1}` : "Đang di chuyển tự do";
 
-                    if (st1 !== "") {
-                        freeStreetEl.innerHTML = `<span class="label-text">Hiện tại:</span>${st1}`;
-                    } else {
-                        freeStreetEl.innerHTML = "Đang di chuyển tự do";
-                    }
-
-                    const alertBanner = document.getElementById('alert-banner');
-                    const alertText = document.getElementById('alert-text');
-                    const alertIcon = document.getElementById('alert-icon');
-
+                    const alertBanner = document.getElementById('alert-banner'), alertText = document.getElementById('alert-text'), alertIcon = document.getElementById('alert-icon');
                     if (data.alr !== undefined && data.alr > 0 && data.alrD !== undefined && data.alrD <= 850) {
-                        let alertName = "Cảnh báo";
-                        let svgIcon = IconHazard;
-                        
+                        let alertName = "Cảnh báo", svgIcon = IconHazard;
                         switch(data.alr) {
                             case 1: svgIcon = IconPolice; alertName = "Cảnh sát"; break;
                             case 2: svgIcon = IconCamera; alertName = "Camera tốc độ"; break;
                             case 3: svgIcon = IconTrafficLight; alertName = "Camera đèn đỏ"; break;
                             case 4: svgIcon = IconHazard; alertName = "Nguy hiểm"; break;
-                            case 40: svgIcon = IconCamera; alertName = "Phạt nguội"; break;
-                            default: svgIcon = IconHazard; alertName = "Cảnh báo";
+                            case 40: svgIcon = IconCamera; alertName = "Camera phạt nguội"; break;
                         }
-
-                        let alertDist = ` • ${data.alrD}m`;
-                        alertIcon.innerHTML = svgIcon;
-                        alertText.innerText = `${alertName}${alertDist}`;
-                        alertBanner.classList.remove('hidden');
-                    } else {
-                        alertBanner.classList.add('hidden');
-                    }
+                        alertIcon.innerHTML = svgIcon; alertText.innerHTML = `${alertName}<br>${data.alrD}m`; alertBanner.classList.remove('hidden');
+                    } else { alertBanner.classList.add('hidden'); }
 
                     if (data.trn !== undefined && isNavigating) {
-                        let svgIcon = IconStraight;
-                        let text = "Đi thẳng";
-                        let isRoundabout = false;
-                        
+                        let svgIcon = IconStraight, text = "Đi thẳng", isRoundabout = false;
                         switch(data.trn) {
                             case 1: svgIcon = IconStraight; text = "Đi thẳng"; break;
                             case 2: case 6: svgIcon = IconLeft; text = "Rẽ trái"; break;
@@ -582,41 +494,22 @@
                             case 5: svgIcon = IconSlightRight; text = "Chếch phải"; break;
                             case 8: svgIcon = IconUTurn; text = "Quay đầu"; break;
                             case 17: svgIcon = IconArrive; text = "Đã đến nơi"; break;
-                            case 10: case 11: case 12: case 19: case 20: 
-                                svgIcon = IconRoundabout; 
-                                text = "Vòng xuyến";
-                                isRoundabout = true;
-                                break;
+                            case 10: case 11: case 12: case 19: case 20: svgIcon = IconRoundabout; text = "Vòng xuyến"; isRoundabout = true; break;
                             default: svgIcon = IconStraight; text = "Tiếp tục";
                         }
                         if (data.trn === 0) { svgIcon = IconStraight; text = "Đang đi"; }
 
-                        document.getElementById('turn-icon').innerHTML = svgIcon;
-                        document.getElementById('turn-instruction').innerText = text;
+                        document.getElementById('turn-icon').innerHTML = svgIcon; document.getElementById('turn-instruction').innerText = text;
 
                         const exitBadge = document.getElementById('exit-badge');
-                        if (isRoundabout && data.exit !== undefined && data.exit > 0) {
-                            exitBadge.innerText = `Lối ra số ${data.exit}`;
-                            exitBadge.classList.remove('hidden');
-                        } else {
-                            exitBadge.classList.add('hidden');
-                        }
+                        if (isRoundabout && data.exit !== undefined && data.exit > 0) { exitBadge.innerText = `Lối ra số ${data.exit}`; exitBadge.classList.remove('hidden'); }
+                        else { exitBadge.classList.add('hidden'); }
                     }
 
-                    let etaStr = data.eta ? data.eta : "--:--";
-                    let rminStr = data.rmin !== undefined ? data.rmin : "--";
-                    let distLeftStr = "--";
-                    if (data.rm !== undefined && data.rm >= 0) {
-                        distLeftStr = (data.rm / 1000).toFixed(1);
-                    } else if (data.rkm !== undefined) {
-                        distLeftStr = data.rkm;
-                    }
-
-                    if (isNavigating) {
-                        document.getElementById('eta-text').innerHTML = `ETA ${etaStr} &nbsp;|&nbsp; ${rminStr} phút &nbsp;|&nbsp; ${distLeftStr} km`;
-                    } else {
-                        document.getElementById('eta-text').innerHTML = `Đang di chuyển tự do`;
-                    }
+                    let etaStr = data.eta ? data.eta : "--:--", rminStr = data.rmin !== undefined ? data.rmin : "--", distLeftStr = "--";
+                    if (data.rm !== undefined && data.rm >= 0) distLeftStr = (data.rm / 1000).toFixed(1);
+                    else if (data.rkm !== undefined) distLeftStr = data.rkm;
+                    document.getElementById('eta-text').innerHTML = isNavigating ? `ETA ${etaStr} &nbsp;|&nbsp; ${rminStr} phút &nbsp;|&nbsp; ${distLeftStr} km` : `Đang di chuyển tự do`;
                 }
             } catch (e) {}
         };

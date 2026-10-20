@@ -1,12 +1,23 @@
-#!/var/jb/bin/sh
-export PATH="/var/jb/usr/bin:/var/jb/bin:/var/jb/usr/local/bin:/usr/bin:/bin:$PATH"
+#!/bin/sh
+export PATH="/var/jb/usr/bin:/var/jb/bin:/var/jb/usr/local/bin:/usr/bin:/bin:/usr/local/bin:/usr/sbin:/sbin:$PATH"
 
 DIR="/var/jb/Library/WazeHUD"
+if [ ! -d "$DIR" ] && [ -d "/Library/WazeHUD" ]; then
+    DIR="/Library/WazeHUD"
+fi
+
 LOG_FILE="/var/mobile/wazehud.log"
 PID_FILE="/var/mobile/wazehud.pid"
 
-PYTHON_BIN="/var/jb/usr/bin/python3"
-if [ ! -x "$PYTHON_BIN" ]; then
+# Tìm kiếm python3 trên mọi phiên bản iOS (Rootless lẫn Rootful từ iOS 9 đến 16+)
+PYTHON_BIN=""
+for p in /var/jb/usr/bin/python3 /usr/bin/python3 /var/jb/usr/local/bin/python3 /usr/local/bin/python3 /var/jb/bin/python3 /bin/python3; do
+    if [ -x "$p" ]; then
+        PYTHON_BIN="$p"
+        break
+    fi
+done
+if [ -z "$PYTHON_BIN" ]; then
     PYTHON_BIN="$(which python3 2>/dev/null || echo python3)"
 fi
 
@@ -38,6 +49,14 @@ stop_server() {
 start_server() {
     stop_server
     sleep 0.3
+
+    # Tự động tải websockets chạy nền nếu chưa có pip / websockets (chạy ngầm không chặn server)
+    if [ -x "$PYTHON_BIN" ]; then
+        "$PYTHON_BIN" -c "import websockets" 2>/dev/null || {
+            ( "$PYTHON_BIN" -m pip install websockets >/dev/null 2>&1 || pip3 install websockets >/dev/null 2>&1 ) &
+        }
+    fi
+
     if [ -d "$DIR" ]; then
         cd "$DIR" || exit 1
         touch "$LOG_FILE" 2>/dev/null
@@ -55,6 +74,33 @@ case "$1" in
     restart|start)
         start_server "$2" "$3"
         ;;
+    restore)
+        if [ -f "$DIR/index.html.default" ]; then
+            cp -f "$DIR/index.html.default" "$DIR/index.html"
+            chmod 666 "$DIR/index.html" 2>/dev/null || true
+            chown mobile:mobile "$DIR/index.html" 2>/dev/null || true
+        fi
+        if [ -f "$DIR/server.py.default" ]; then
+            cp -f "$DIR/server.py.default" "$DIR/server.py"
+            chmod 666 "$DIR/server.py" 2>/dev/null || true
+            chown mobile:mobile "$DIR/server.py" 2>/dev/null || true
+        fi
+        echo "restored"
+        ;;
+    install-file)
+        SRC="$2"
+        DEST_NAME="$3"
+        if [ -n "$SRC" ] && [ -f "$SRC" ] && [ -n "$DEST_NAME" ]; then
+            mkdir -p "$DIR" 2>/dev/null || true
+            cp -f "$SRC" "$DIR/$DEST_NAME"
+            chmod 666 "$DIR/$DEST_NAME" 2>/dev/null || true
+            chown mobile:mobile "$DIR/$DEST_NAME" 2>/dev/null || true
+            rm -f "$SRC" 2>/dev/null || true
+            echo "installed"
+        else
+            echo "error"
+        fi
+        ;;
     status)
         if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE" 2>/dev/null)" 2>/dev/null; then
             echo "running"
@@ -63,7 +109,7 @@ case "$1" in
         fi
         ;;
     *)
-        echo "Usage: $0 {start|stop|restart|status} [httpPort] [wsPort]"
+        echo "Usage: $0 {start|stop|restart|status|restore|install-file} [args...]"
         ;;
 esac
 

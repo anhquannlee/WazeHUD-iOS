@@ -123,8 +123,25 @@
 			<key>action</key>
 			<string>restoreDefaultFiles:</string>
 		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Thông Tin Hệ Thống</string>
+			<key>footerText</key>
+			<string>© 2026 WazeHUD Pro • Tương thích iOS 9 - 16+</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSTitleValueCell</string>
+			<key>label</key>
+			<string>Phiên Bản</string>
+			<key>get</key>
+			<string>getVersionString:</string>
+		</dict>
 	</array>
 	<key>title</key>
-	<string>WazeHUD Pro</string>
+	<string>WazeHUD Pro v2.0.0</string>
 </dict>
 </plist>
